@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+		<link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+		<!--[if lt IE 9]>
+		<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		<title>Fibonacci</title>
+	</head>
+<body>
+	<div id="container">
+		<div class="inner">
+
+			<header>
+				<h1>Rachel's Wiki World</h1>
+				<!--<h2>Rachel's Wiki World</h2>-->
+			</header>
+
+			<section id="downloads" class="clearfix">
+				<a href="https://github.com/whwzzdmyzcg" id="view-on-github" class="button"><span>View on GitHub</span></a>
+			</section>
+
+			<hr>
+
+		<section id="main_content">
+		
+<h2 id="toc_0.1" class="justcenter">Fibonacci</h2>
+<p>
+<a href="http://www.cnblogs.com/xwdreamer/archive/2012/05/15/2501606.html">http://www.cnblogs.com/xwdreamer/archive/2012/05/15/2501606.html</a>
+<a href="http://blog.linjian.org/articles/fibonacci-essay/">http://blog.linjian.org/articles/fibonacci-essay/</a>
+</p>
+<h3 id="toc_0.1.1">递推关系定义</h3>
+<ul>
+<li>
+F(n) = 0, if n = 0;
+
+<li>
+F(n) = 1, if n = 1;
+
+<li>
+F(n) = F(n-1) + F(n-2), if n &gt; 1;
+
+</ul>
+<h3 id="toc_0.1.2">递归法</h3>
+<pre>
+int Fibonacci(int n)
+{
+	if (n &lt;= 0)
+		return 0;
+	else if (n == 1)
+		return 1;
+	else
+		return Fibonacci(n-1) + Fibonacci(n-2);
+}
+</pre>
+<p>
+代码量更少
+</p>
+<pre>
+int Fibonacci(int n)
+{
+	return (n&gt;=2 &amp;&amp; (Fibonacci(n-1) + Fibonacci(n-2))) || n;
+}
+</pre>
+<p>
+缺点：存在大量重复计算，时间复杂度是n的指数级O(2<sup><small>n</small></sup>)。
+</p>
+<h3 id="toc_0.1.3">循环取代递归</h3>
+<pre>
+int Fibonacci(int n)
+{
+	if (n &lt;= 0)
+		return 0;
+	else if (n == 1)
+		return 1;
+	else
+	{
+		int *array = new int[n+1];
+		array[0] = 0;
+		array[1] = 1;
+		for (int i = 2; i &lt;= n; i++)
+			array[i] = array[i-1] + array[i-2];
+		int result = array[n];
+		// 动态分配的数组会一直存在，直到显式释放为止
+		delete [] array;
+		return result;
+	}
+}
+</pre>
+<p>
+空间换时间：时间复杂度O(n)，空间复杂度O(n)。
+</p>
+<h3 id="toc_0.1.4">转移矩阵法</h3>
+<h4 id="toc_0.1.4.1">分析</h4>
+<p>
+该方法常见于线性代数的Markov过程示例。
+</p>
+
+<p>
+Fibonacci数列是二阶递推数列，所以存在一个2*2的矩阵A，使得(F<sub><small>n</small></sub> F<sub><small>n-1</small></sub>) = (F<sub><small>n-1</small></sub> F<sub><small>n-2</small></sub>)*A
+</p>
+
+<p>
+求解可得A = (1,1;1,0)
+</p>
+
+<p>
+即有(F<sub><small>n</small></sub> F<sub><small>n-1</small></sub>) = (F<sub><small>n-1</small></sub> F<sub><small>n-2</small></sub>)*A = (F<sub><small>n-2</small></sub> F<sub><small>n-3</small></sub>)*A<sup><small>2</small></sup> = ... = (F<sub><small>1</small></sub> F<sub><small>0</small></sub>)*A<sup><small>n-1</small></sup>
+</p>
+
+<p>
+所以问题转化为求解矩阵A的方幂。
+</p>
+<pre>
+Class Matrix;	// 假设已有实现了乘法操作的矩阵类
+Matrix MatrixPow(const Matrix &amp;m, int n)
+{
+	Matrix result = Matrix::Indentity;	// 赋初值为单位矩阵
+	Matrix tmp = m;
+	for (; n; n &gt;&gt;= 1)
+	{
+		if (n &amp; 1)
+			result *= tmp;
+		tmp *= tmp;
+	}
+}
+int Fibonacci(int n)
+{
+	Matrix an = MatrixPow(A, n-1);
+	return F1*an(0,0) + F0*an(1,0);
+}
+</pre>
+<p>
+时间复杂度O(log<sub><small><sub>2</sub></small></sub>n)。
+</p>
+<h3 id="toc_0.1.5">迭代法</h3>
+<p>
+上一个方法中保存了每一个中间变量，但实际上没有必要保存每一个中间变量，只需要保存两个临时变量即可。
+</p>
+<pre>
+int Fibonacci(int n)
+{
+	if (n &lt;= 0)
+		return 0;
+	else if (n == 1)
+		return 1;
+	else
+	{
+		//n&gt;=2时，初始化pre=f(0)=0,post=f(1)=1,f(n)=0
+		int pre = 0;
+		int post = 1;
+		int fn = 0;
+		// 循环计算Fibonacci数列，用临时变量pre和post保存中间结果，避免重复计算
+		for (int i = 2; i &lt;= n; i++)
+		{
+			fn = pre + post;
+			pre = post;
+			post = fn;
+		}
+		return fn;
+	}
+}
+</pre>
+<p>
+时间复杂度O(n)，空间复杂度O(1)
+</p>
+<h3 id="toc_0.1.6">通项公式法</h3>
+<p>
+略
+</p>
+<h3 id="toc_0.1.7">模板元编程法</h3>
+<p>
+不能算算法，只是用到了C++编程技巧。
+</p>
+
+<p>
+通常在C+++中使用模板，仅限于类模板与函数模板。但实际上C++支持模板元编程，理论上可以在编译时执行任何计算(甚至包含选择、循环、递归等结构)。
+</p>
+<pre>
+#define Fib(N) FibT&lt;N&gt;::Val
+template&lt;int n&gt; struct FibT
+{
+	enum
+	{
+		Val = FibT&lt;n - 1&gt;::Val + FibT&lt;n - 2&gt;::Val
+	};
+};
+template&lt;&gt; struct FibT&lt;0&gt;
+{
+	enum
+	{
+		Val = 0
+	};
+};
+template&lt;&gt; struct FibT&lt;1&gt;
+{
+	enum
+	{
+		Val = 1
+	};
+};
+</pre>
+<p>
+用一个结构体作为模板的载体，用一个枚举值保存运算结果。
+</p>
+
+<p>
+其中第一个模板为基本递归过程(使用递归算法是为了说明的简便，完全可以用其它算法替代，以加速编译过程)，后两个模板为n=0、1时的模板特化。
+</p>
+
+<p>
+通过#define语句将模板调用简写成类似函数调用的方式。程序在编译时计算所需的 Fibonacci数列项，将结果作为常量嵌入编译好的程序。运行时直接使用结果，时间复杂度真正地变成了O(1)。
+</p>
+
+<p>
+这一方法最大的局限就是只能对常量嵌入，程序中出现诸如计算Fib(i++)的情况则无能为力。
+</p>
+
+<p>
+尽管如此，这比在代码中手工计算并写入所需的值要直观准确，比通过纯粹的表驱动法“空间换时间”要方便快捷。
+</p>
+<h3 id="toc_0.1.8">函数对象法</h3>
+<p>
+不能算算法，只是用到了C++编程技巧。
+</p>
+
+<p>
+主要用于C++ STL编程的通用算法方面。
+</p>
+<pre>
+class Fib
+{
+public:
+	Fib() : a(0), b(1), n(0)
+	{
+	}
+	unsigned long operator()()
+	{
+		if (n &lt;= 1)
+		{
+			n++;
+			return n - 1;
+		}
+		else
+		{
+			int c;
+			c = a + b;
+			a = b;
+			b = c;
+			return c;
+		}
+	}
+private:
+	int a, b, n;
+};
+</pre>
+<p>
+这个函数类对象的行为可以理解为一个“Fibonacci数列发生器”，其调用测试如下
+</p>
+<pre>
+void test(int i)
+{
+	Fib fib;
+	do
+	{
+		cout &lt;&lt; fib() &lt;&lt; endl;
+	}
+	while (i--);
+}
+</pre>
+<p>
+函数对象具有与函数指针类似的行为，同时又能保存自身的一些属性，因此常用于STL通用算法编程。但针对单个的Fibonacci数列项求值，灵活性不如一般的方法。
+</p>
+<h3 id="toc_0.1.9">变形1：Frog</h3>
+<h4 id="toc_0.1.9.1">描述及分析</h4>
+<p>
+一只青蛙一次可以跳上1级台阶，也可以跳上2级台阶，问该青蛙跳上一个n级的台阶总共有多少种跳法。
+</p>
+
+<p>
+该题本质是Fibonacci数列。
+</p>
+<ul>
+<li>
+若只有一个台阶，则只有一种跳法，即一次跳一级，f(1)=1；
+
+<li>
+若有两个台阶，则第一种跳法是一次跳一级，第二种跳法是一次跳两级；
+
+<li>
+若有大于两级的台阶，则假如第一次跳一级，剩下n-1级，有f(n-1)种跳法，假如第一次跳两级台阶，剩下n-2级台阶，有f(n-2)种跳法，即f(n)=f(n-1)+f(n-2)。
+
+</ul>
+<h3 id="toc_0.1.10">变形2：Rectangle</h3>
+<h4 id="toc_0.1.10.1">描述及分析</h4>
+<p>
+用2*1(2行1列)的小矩形横着或竖着去覆盖更大的矩形。问用8个2*1的小矩形无重复地覆盖一个2*8的大矩形，共有多少种方法。
+<img src="images/Rectangle.png" />
+该题是斐波那契数列的变形。
+</p>
+
+<p>
+设f(8)表示覆盖2X8大矩形的方法总数。
+</p>
+<ul>
+<li>
+若第一个小矩形是竖着去覆盖大矩形，那么还剩下由7个2X1的小矩形组成的大矩形f(7)；
+
+<li>
+若第一个小矩形是横着去覆盖大矩形，那么还剩下由6个2X1的小矩形组成的大矩形f(6)。
+
+<li>
+即f(8)=f(7)+f(6)。依此类推，最后f(1)=1，f(2)=2。使用计算斐波那契数列的方法即可求出答案。
+
+</ul>
+
+		</section>
+
+		<footer>
+		This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+		</footer>
+
+
+		</div>
+	</div>
+</body>
+</html>
