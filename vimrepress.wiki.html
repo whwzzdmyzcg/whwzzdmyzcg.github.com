@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="/home/longhua/.vim/plugin/hammer.vim/assets/stylesheets/default.css"> </link>  
+    <title> Preview </title>
+  </head>
+  
+  <body>
+    <div id="content">
+      
+<p>"=========== Meta ============
+"StrID : 
+"Title : vimrepress and vimwiki
+"Slug  : vimrepress and vimwiki
+"Cats  : Uncategorized
+"Tags  : 
+"=============================
+"EditType   : post
+"EditFormat : Markdown
+"BlogAddr   : <a href="http://www.fangze.info/">http://www.fangze.info/</a>
+"========== Content ==========
+vimwiki-编辑管理wiki
+vim hammer-把markdown语法的wiki转成html
+vim repress-以markdown语法管理wordpress博客
+git-vimwiki版本控制
+dropbox-cloud
+</p>
+<p>apt-get install python-markdown	-对markdown文档进行语法高亮
+</p>
+<p>VimRePress
+参考http://likecer.com/vimrepress/
+参考http://ihacklog.com/post/write-blog-with-vim-via-vimpress-plugin.html
+参考http://apt-blog.net/release-of-vimrepress_cn
+参考http://blog.pkufranky.com/2011/11/%E4%BD%BF%E7%94%A8vim%E5%92%8Cmarkdown%E6%92%B0%E5%86%99blog%E5%B9%B6%E5%8F%91%E5%B8%83%E5%88%B0wordpress/
+参考http://limijd.sinaapp.com/?p=30
+</p>
+<p>前身：VimPress
+身份：Vim插件
+作用：Vim编辑器下用来编辑/发布WordPress博客的工具
+配置：~/.vimpressrc
+[Blog0]
+blog_url = YOUR_BLOG_URL
+username = ADMIN_NAME 
+password = PASSWORD
+要让帮助文档生效，更新
+
+
+<dl><dd>helptags ~/.vim/doc</dd></dl>
+可以设置BROWSER环境变量来指定预览的浏览器：
+export BROWSER='w3m:lynx:links'
+查看帮助-:h vimpress
+原理：
+当:BlogSave时，在本地使用python-markdown转换为html，通过XML-RPC发布到WordPress，而markdown源文件则通过附件的形式上传到WordPress(meta中的TextAttach属性)。当编辑已有post时，是将上传的附件源文件下载下来进行编辑。
+以本地文件而非WordPress作为数据源：
+若想以本地文件而非WordPress作为数据源，以便可通过Git对所有数据进行管理，也可将这些meta信息添加到所撰写的markdown源文件的最前面（How？）,将源文件保存并用Git管理。
+使用：
+
+
+
+
+
+
+
+
+
+
+<dl><dd>BlogList-博文列表，默认30篇。:BlogList #NUMBER</dd><dd>BlogNew-新建博文</dd><dd>BlogSave [draft]-保存博文，默认保存为草稿；会生成一个mkd.txt文档，上传到博客并保存为草稿</dd><dd>BlogSave publish-发布博文</dd><dd>BlogPreview-预览博文</dd><dd>BlogPreview publish-浏览器自动打开并预览博文</dd><dd>BlogOpen #POST_ID-在浏览器中打开对应ID的博文</dd><dd>BlogOpen #POST_NAME-在浏览器中打开对应NAME的博文</dd><dd>BlogCode-生成pre标签，用于插入代码；默认使用wp-syntax插件的高亮模式</dd><dd>BlogUpload file-上传图片等媒体文件</dd></dl>
+编辑：
+VimRepress采用的是Markdown语法(WowUbuntu <a href="http://wowubuntu.com上有专门的教程http://wowubuntu.com/markdown/)">http://wowubuntu.com上有专门的教程http://wowubuntu.com/markdown/)</a>
+分段-段落之间要有一个空行。
+标题-#最大的标题#，##次之##，等等，依次类推。
+分隔符-用----或者****
+超链接-[描述词](链接地址)
+插入图片-![描述词](图片地址)
+</p>
+<p>小技巧：github.com按m键可以快速查看markdown语法
+Q：怎样在指定page下发文章，还是只能发了文章后到后台去修改其所属page？
+</p>
+<p>Vimwiki
+参考http://wiki.ktmud.com/tips/vim/vimwiki-guide.html
+参考http://www.ruchee.com/code/linux/vim/2011-05-18.html
+参考http://augix.com/wiki/Vimwiki.html#toc_3.2.3
+<a href="http://xbeta.info/vimwiki.htm">http://xbeta.info/vimwiki.htm</a>
+<a href="http://www.berlinix.com/vim/VimWiki.php">http://www.berlinix.com/vim/VimWiki.php</a>
+</p>
+<p>在线中文文档
+<a href="https://code.google.com/p/vim-script-cn/source/browse/trunk/doc/vimwiki.cnx">https://code.google.com/p/vim-script-cn/source/browse/trunk/doc/vimwiki.cnx</a>
+<a href="http://vim-script-cn.googlecode.com/svn/trunk/doc/vimwiki.cnx">http://vim-script-cn.googlecode.com/svn/trunk/doc/vimwiki.cnx</a>
+</p>
+<p>vimwiki使用
+<a href="http://wowubuntu.com/vimwiki.html">http://wowubuntu.com/vimwiki.html</a>
+- Enter：与双击效果等同，在当前窗口中打开NewPage页面。
+- Shift+Enter：上下分割窗口，NewPage在上，原页面在下。
+- Ctrl+Enter：左右分割窗口，NewPage在左，原页面在右。
+Leader>ww -- 打开默认的wiki主页
+<Leader>wt -- 在新的标签页中打开默认的wiki主页
+<Leader>ws -- Select and open wiki index file.(未知)
+<Leader>wd -- 删除你所在的wikiword的页面
+<Leader>wr -- 重命名你所在的wikiword页面
+Backspace -- 自动保存当前wiki页面并返回上一页
+Tab -- 寻找下一个wikiword
+Shift Tab -- 寻找上一个wikiword
+如果有什么不懂,可输入在"Normal"下输入":h vimwiki-mappings"查询
+与Vim紧密结合,可使用Vim的内建的正则表达式规则,高效处理文本
+与Vim紧密结合,可利用Vim内建的多种命令,以及可显示多个分页的特性,同时展示多种窗口,快速查看多份资料.
+由于Vim是文本处理工具,所以任何笔记,只要存为文本数据,便可以用Vim来组织和整理
+<a href="http://gaowhen.com/post/anytime-anywhere-vimwiki.html">http://gaowhen.com/post/anytime-anywhere-vimwiki.html</a>
+使用 vimwiki 你可以：
+组织笔记和想法；
+管理待办事项列表；
+写文档。
+对 dropbox 就不多做介绍了，利用它可以在多机器多系统下很方便的同步资料。
+同样，这里也利用 dropbox 打造可同步的 vimwiki 资料库。其实只需要把 vimwiki 资料文件夹指定到 dropbox 同步文件夹中就行了。
+在 vimrc 文件加上(Mac下)
+“vimwiki
+let g:vimwiki_use_mouse = 1
+let g:vimwiki_list = [{'path':]
+windows 下，修改相应路径就可以了。
+</p>
+<p>http://kanedou.me/2010/02/new-content-on-vimwiki/
+vimwiki作为个人笔记的可用性及丰富性又提升了，相对于moinmoin这样的专业wiki除了在数据访问的问题（通过dropbox等也应该不难解决）上差一点外，其他方面已经足够让个人方便地管理自己的各种可输出为文本的知识内容了。
+</p>
+<p>这里顺便要推一个syntaxhighlighter的javascript程序，很好地完成了vimwiki中的代码高亮，只是支持的语言还不够全面，但对我已足够。而且vimwiki自己支持内嵌语法高亮，也就是在编辑wiki源文时的语法高亮（通过nested_syntax选项设置），因此对于代码而言，已经很友好了。
+</p>
+
+<p>http://my.opera.com/gcy001/blog/2011/12/15/vimwiki
+SyntaxHighlighter的设置
+</p>
+<p>http://wangheng.org/html/index.html#toc_5
+一些技术python
+</p>
+<p>Q：wiki中怎么写注释？
+A：%%注释整行。
+</p>
+<p>Q：图片链接问题
+A：旧版本的vimwiki中用的是[]或，新版本中用。
+Q：怎样分离出Header，Footer？
+A：目前还没有这种需要，用模板就OK了。
+Q：制作404页面
+Q：html/style.css是在用Ctrl+F5命令时自动生成的，为什么会生成？而生成后又没有被用到
+Q：如何实现代码的折叠和打开？
+Q：代码缩进问题
+Q：上标下标问题：上标用^<sup>上</sup>^，下标用,,<sub>下</sub>,,。但是用了没有效果。
+接下来：</p>
+    </div>
+  </body>
+
+</html>
+

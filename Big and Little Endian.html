@@ -10,7 +10,7 @@
 		<!--[if lt IE 9]>
 		<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
-		<title>Rachel's Wiki World</title>
+		<title>Big and Little Endian</title>
 	</head>
 <body>
 	<div id="container">
@@ -29,24 +29,67 @@
 
 		<section id="main_content">
 		
+<h2 id="toc_0.1">Big and Little Endian</h2>
+<h3 id="toc_0.1.1">判断低位优先和高位优先</h3>
 <p>
-"=========== Meta ============
-"StrID : 2911
-"Title : Wiki
-"Slug  : wiki
-"Cats  : Uncategorized
-"Tags  : 
-"=============================
-"EditType   : post
-"EditFormat : Markdown
-"BlogAddr   : <a href="http://www.fangze.info/">http://www.fangze.info/</a>
-"========== Content ==========
+方法一
 </p>
-<h2 id="toc_0.1"><a href="Algorithm.html">Algorithm</a></h2>
-<h2 id="toc_0.2"><a href="网络编程.html">网络编程</a></h2>
-<h2 id="toc_0.3"><a href="SolCloud.html">SolCloud</a></h2>
-<h2 id="toc_0.4"><a href="VIM.html">VIM</a></h2>
-<h2 id="toc_0.5"><a href="About.html">About</a></h2>
+<pre>
+// big endian返回false，little endian返回true
+bool big_or_little(void)
+{
+	int x = 0x1;
+	char *p = &amp;x;
+
+	if (1 == *p)
+		return true;
+	else
+		return false;
+}
+</pre>
+<p>
+方法二
+</p>
+<pre>
+// big endian返回false，little endian返回true
+typedef union
+{
+	char c;
+	int a;
+}U;
+bool big_or_little(void)
+{
+	U u;
+	u.a = 1;
+	if (1 == u.c)
+		return true;
+	else
+		return false;
+}
+</pre>
+<h3 id="toc_0.1.2">应用</h3>
+<p>
+改变一个整数的存储格式，如低位优先存储改为高位优先存储，或反之。
+</p>
+<pre>
+// @x:待改变存储格式的整数
+int chgendian(int x)
+{
+	int tmp = 0;
+	char *p = (char *)&amp;x;
+	int shift = sizeof(int)*8 - 8; // 第一个字节移动的位数
+
+	for (int i = 0; i &lt; sizeof(int); i++)
+	{
+		// 依次将4个字节左移24位，16位，8位，0位
+		tmp |= *p&lt;&lt;shift;
+		shift -= 8;
+		p++;
+	}
+
+	return tmp;
+}
+</pre>
 
 		</section>
 

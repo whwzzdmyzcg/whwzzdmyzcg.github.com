@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+		<link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+		<!--[if lt IE 9]>
+		<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		<title>Log System</title>
+	</head>
+<body>
+	<div id="container">
+		<div class="inner">
+
+			<header>
+				<h1>Rachel's Wiki World</h1>
+				<!--<h2>Rachel's Wiki World</h2>-->
+			</header>
+
+			<section id="downloads" class="clearfix">
+				<a href="https://github.com/whwzzdmyzcg" id="view-on-github" class="button"><span>View on GitHub</span></a>
+			</section>
+
+			<hr>
+
+		<section id="main_content">
+		
+<h2 id="toc_0.1">Log System</h2>
+<div class="toc">
+<ul>
+<li><a href="#toc_0.1">Log System</a>
+<ul>
+<li><a href="#toc_0.1.1">概述</a>
+<ul>
+<li><a href="#toc_0.1.1.1">本文目的</a>
+<li><a href="#toc_0.1.1.2">整体描述</a>
+<li><a href="#toc_0.1.1.3">模块间交互</a>
+</ul>
+<li><a href="#toc_0.1.2">详细设计</a>
+<ul>
+<li><a href="#toc_0.1.2.1">接口设计</a>
+<li><a href="#toc_0.1.2.2">数据结构</a>
+<li><a href="#toc_0.1.2.3">数据库表格设计</a>
+</ul>
+<li><a href="#toc_0.1.3">模块功能</a>
+<li><a href="#toc_0.1.4">命令行接口和web接口设计</a>
+</ul>
+</ul>
+</ul>
+</div>
+<h3 id="toc_0.1.1">概述</h3>
+<h4 id="toc_0.1.1.1">本文目的</h4>
+<p>
+本文主要描述了SolCloud云管理平台中的日志系统实现的整体框架、流程及类图的说明，用来指导日志系统编码实现。
+</p>
+<h4 id="toc_0.1.1.2">整体描述</h4>
+<p>
+日志系统作为SolCloud系统的一部分，负责组织和整理其他各模块的log信息供显示和查询，以达到记录SolCloud系统运行状况的目的。日志记录按详略程度分为三类：DEVELOP、ADMIN和USER，其详细程度逐渐降低。其中，DEVELOP类的日志主要用于系统开发，ADMIN类的日志主要用于管理员维护系统，USER类的日志用于普通用户和管理员查看系统使用情况。
+</p>
+<h4 id="toc_0.1.1.3">模块间交互</h4>
+<p>
+Interaction
+</p>
+<table>
+<tr>
+<th>
+模块
+</th>
+<th>
+交互数据
+</th>
+</tr>
+<tr>
+<td>
+日志模块
+</td>
+<td>
+用户信息、主机信息、模块信息、日志消息等
+</td>
+</tr>
+</table>
+<h3 id="toc_0.1.2">详细设计</h3>
+<h4 id="toc_0.1.2.1">接口设计</h4>
+<p>
+●初始化日志系统
+·SolLog::init_log_system(SolLog::MesgLevel mesglevel, const char  *logfile);
+在配置文件oned.conf中：
+DEBUG_LEVEL = 3           
+说明：这是配置消息级别，可选值为ERROR=0,WARNING=1,INFO=2,DEBUG=3 ；需要去掉配置文件中原有的DEBUG_LEVEL项。
+参数说明：logfile系统开发日志文件的路径。
+●构造日志消息头
+·SolLog::compose(int userid, const Log::MesgLevel mesglevel, const string operation, const string hostip, const string module);
+说明：VM、Image、vnet和permission需要提供userid。
+●写日志
+·SolLog::log(const LogType logtype, const MesgLevel mesglevel, const char *mesg);
+</p>
+
+<p>
+·#define LOG(logtype, mesglevel, mesg)   log(logtype, mesglevel, mesg, _<em>FILE</em>_, _<em>FUNCTION</em>_, _<em>LINE</em>_)
+●销毁日志系统
+·SolLog::finalize_log_system();
+</p>
+<h4 id="toc_0.1.2.2">数据结构</h4>
+<ol>
+<li>
+日志类别
+
+<ul>
+<li>
+DEVELOP-主要用于开发人员开发
+
+<li>
+ADMIN-主要用于管理员维护系统
+
+<li>
+USER-主要用于普通用户和管理员查看系统使用情况
+<pre>
+enum LogType // 决定谁可以看到信息
+{
+	DEVELOP = 0, // Developer
+	ADMIN = 1, // Developer and Administrator
+	USER = 2 // All
+};
+</pre>
+
+</ul>
+<li>
+日志消息级别
+
+<ul>
+<li>
+ERROR-错误
+
+<li>
+WARNING-警告
+
+<li>
+INFO-一般消息
+
+<li>
+DEBUG-调试信息
+<pre>
+enum MesgLevel
+{
+	ERROR = 0,
+	WARNING = 1,
+	INFO = 2,
+	DEBUG = 3
+};
+</pre>
+
+</ul>
+<li>
+const char *mesg字符串的构成
+
+<ul>
+<li>
+Time-产生日志消息的时间
+
+<li>
+UserID-用户ID
+
+<li>
+HostIP-主机ip地址
+
+<li>
+Module-产生日志消息的模块
+
+<li>
+Location-产生日志消息的源码位置
+
+<li>
+MesgLevel-消息级别
+
+<li>
+Operation-产生日志消息的操作
+
+<li>
+MesgContent-日志消息的内容
+
+</ul>
+</ol>
+<p>
+Time [UserID][MesgLevel][Host][Module][Operation][Location]:MesgContent
+<strong>用[和]来作分界符，则各字段中不能含有这两个符号。Q：有无更好的解决方法？</strong>
+</p>
+<ol>
+<li>
+用于错误定位的宏定义
+
+<ul>
+<li>
+__<em>FUNCTION</em>__
+
+<li>
+__<em>LINE</em>__
+
+<li>
+__<em>FILE</em>__
+
+</ul>
+</ol>
+<p>
+<strong>只在DEVELOP日志中记录错误位置，只有出错时才记录位置。</strong>
+使用_<em>FUNCTION</em>_需要#include &lt;stdlib.h&gt;。
+</p>
+<h4 id="toc_0.1.2.3">数据库表格设计</h4>
+<p>
+两个表-adminlog_pool和userlog_pool
+adminlog_pool
+<table>
+<tr>
+<th>
+字段名
+</th>
+<th>
+数据类型
+</th>
+<th>
+属性
+</th>
+<th>
+说明
+</th>
+</tr>
+<tr>
+<td>
+id
+</td>
+<td>
+INTEGER
+</td>
+<td>
+PRIMARY KEY
+</td>
+<td>
+编号
+</td>
+</tr>
+<tr>
+<td>
+timestamp
+</td>
+<td>
+INTEGER
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+日志生成的时间
+</td>
+</tr>
+<tr>
+<td>
+uid
+</td>
+<td>
+INTEGER
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+用户ID
+</td>
+</tr>
+<tr>
+<td>
+mesglevel
+</td>
+<td>
+INTEGER
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+消息级别
+</td>
+</tr>
+<tr>
+<td>
+host
+</td>
+<td>
+TEXT
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+主机名
+</td>
+</tr>
+<tr>
+<td>
+module
+</td>
+<td>
+VARCHAR(128)
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+模块名
+</td>
+</tr>
+<tr>
+<td>
+operation
+</td>
+<td>
+TEXT
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+操作
+</td>
+</tr>
+<tr>
+<td>
+mesgcontent
+</td>
+<td>
+TEXT
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+消息内容(详细技术性)
+</td>
+</tr>
+</table>
+userlog_pool
+</p>
+<table>
+<tr>
+<th>
+字段名
+</th>
+<th>
+数据类型
+</th>
+<th>
+属性
+</th>
+<th>
+说明
+</th>
+</tr>
+<tr>
+<td>
+id
+</td>
+<td>
+INTEGER
+</td>
+<td>
+PRIMARY KEY
+</td>
+<td>
+编号
+</td>
+</tr>
+<tr>
+<td>
+timestamp
+</td>
+<td>
+INTEGER
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+日志生成的时间
+</td>
+</tr>
+<tr>
+<td>
+uid
+</td>
+<td>
+INTEGER
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+用户ID
+</td>
+</tr>
+<tr>
+<td>
+host
+</td>
+<td>
+TEXT
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+主机名
+</td>
+</tr>
+<tr>
+<td>
+operation
+</td>
+<td>
+TEXT
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+操作
+</td>
+</tr>
+<tr>
+<td>
+mesgcontent
+</td>
+<td>
+TEXT
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+消息内容(简单)
+</td>
+</tr>
+</table>
+<h3 id="toc_0.1.3">模块功能</h3>
+<p>
+说明：AdminLog和UserLog都继承自PoolSQL。
+</p>
+
+<p>
+类图描述
+</p>
+
+<p>
+oned进程调用SolLog的init_log_system函数完成日志系统的初始化。然后整个系统可以调用SolLog的compose函数构造消息头并调用SolLog的LOG宏写日志。DevLog、AdminLog和UserLog是需要添加的类。DevLog用于操作开发人员的日志；AdminLog和UserLog分别用于操作数据库表adminlog_pool和userlog_pool。最后oned进程调用SolLog的finalize_log_system函数销毁日志系统。
+</p>
+
+<p>
+具体的写日志过程：
+</p>
+<ul>
+<li>
+若logtype=2(USER) 且mesglevel&lt;=defaultlevel，则往userlog_pool中写；
+
+<li>
+若logtype=1(ADMIN) 且mesglevel&lt;=defaultlevel，则往 adminlog_pool中写；
+
+<li>
+若logtype=0(DEVELOP)且mesglevel&lt;=defaultlevel，则往oned.log中写。
+
+</ul>
+
+
+<p>
+接口：
+开发日志oned.log不需要提供接口，开发人员自己在后台查看即可；日志的删除也不需要提供接口，由管理员手动或编写脚本定期清理。因此，对于数据库表adminlog_pool和userlog_pool，只需要有插入和查询操作。
+VMID/vm.log留着，但需要更改使用的接口为DevLog。关于$VMID/vm.log的显示：sunstone直接读取文件显示。
+one_xmlrpc.log保留，不作任何改动。
+</p>
+
+<p>
+关于查询日志：
+虚拟机日志$VMID/vm.log需要在网页上显示。
+开发人员日志oned.log不需要在网页上显示。
+用户日志：管理员adminlog_pool&amp;userlog_pool需要在网页上显示；
+普通用户userlog_pool需要在网页上显示。
+</p>
+
+<p>
+修改一个大系统的方法：先保留系统中原来的部分，自己的代码中用新名字，待代码调通后再替换掉原来系统中的代码。
+</p>
+
+<p>
+1、日志查看的权限控制应该在哪里实现？
+权限控制：普通用户只能查看userlog_pool和属于他自己的VM的vm.log文件；管理员可以看userlog_pool和adminlog_pool及所有的VM的vm.log文件。
+</p>
+
+<p>
+把日志做成一个线程LogManager，其他Manager通过LogManager往buffer写，而LogManager负责把buffer中的数据写入File或Database。这样就需要对内存缓冲区buffer加锁。
+模型是：多个生产者（那些Manager），一个消费者（LogManager）
+RRDtool宜用来记录状态之类的短信息，在本项目中宜用来记录VM、Host的状态（历史过程）。
+</p>
+
+
+<p>
+LogManager设计：
+日志系统应该尽量先启动，且最后关闭。
+目录lm
+文件lm/LogManager.cc
+</p>
+<blockquote>
+Include/LogManager.h
+</blockquote>
+<p>
+类LogManager（父类为ActionListener，若要记录host端信息，则为多继承，MadManager也为其父类）
+   AdminLogPool（父类为PoolSQL）
+   UserLogPool（父类为PoolSQL）
+</p>
+
+<p>
+AdminLog（暂用AdminNewLog）（AdminLogPool是其友元类）（父类为PoolObjectSQL）
+UserLog（暂用UserNewLog）（UserLogPool是其友元类）（父类为PoolObjectSQL）
+类方法start—启动监听线程
+do_action—作相应操作
+如何定位错误—仍然用宏？
+其他Manager写缓冲区，那么格式化的问题也交由它们做了？--可以放在定义链表的结构体里 就是说结构体里定义个mutex变量 访问该结点的时候就对这个结构体变量里的锁加锁 这么说你明白吗
+LogManager中定义一个buffer，对该buffer加锁。
+如何给缓冲区加锁？
+</p>
+
+<p>
+其他Manager LogManager AdminLogPool&amp;UserLogPoolDB
+命令行XMLRPC client XMRPC serverRM AdminLogPool&amp;UserLogPoolDB
+关于数据库中id编号问题：数据库一直存在，则每次启动one start时需要从数据库中读取当前最大id，所以应该在构造函数中设置回调函数init_cb并执行SQL语句：SELECT id FROM table。将结果保存到变量lastid中，然后id=lasted+1;lastid=id;
+通过看原系统的代码发现，因为所有的数据库表都会有id编号的处理，故将该任务交由底层（PoolSQL）处理（在调用allocate的时候 。。。）。
+</p>
+
+
+<p>
+要保证LogManager线程创建成功后主线程才继续其他操作用条件变量pthread_cond_t：相关函数pthread_cond_init,pthread_cond_destroy,pthread_cond_wait和pthread_cond_signal。
+代码修改情况：
+添加
+include/LogManager.h
+src/log/LogManager.cc
+</p>
+
+<p>
+include/AdminLog.h
+src/log/AdminLog.cc
+</p>
+
+
+<p>
+include/UserLog.h
+src/log/UserLog.cc
+</p>
+
+<p>
+include/AdminLogPool.h
+src/log/AdminLogPool.cc
+</p>
+
+<p>
+include/UserLogPool.h
+src/log/UserLogPool.cc
+*****************************************************************
+src/cli/soladminlog
+</p>
+
+<p>
+src/oca/ruby/SolCloud/AdminLog.rb
+</p>
+
+<p>
+src/oca/ruby/SolCloud/AdminLogPool.rb
+</p>
+
+<p>
+src/rm/RequestManagerAdminLogInfo.cc
+src/rm/RequestManagerAdminLogPoolInfo.cc
+</p>
+
+<p>
+修改
+src/rm/RequestManager.cc
+src/rm/SConstruct
+include/RequestManager.h
+</p>
+
+<p>
+include/Sol.h
+src/sol/Sol.cc
+</p>
+
+<p>
+install.sh
+src/oca/ruby/SolCloud.rb
+</p>
+
+
+<p>
+用GDB调试SolCloud:
+$ gdb src/sol/oned(terminal 1)
+gdb&gt;
+$ solhost list(terminal 2)
+</p>
+
+<p>
+gdb oned相当于one start。然后在另外一个终端$solhost list。
+</p>
+
+
+
+<p>
+1、LogManager实现完毕。
+</p>
+
+<p>
+2、实现了cli接口设计：
+</p>
+<blockquote>
+soladminlog list
+soladminlog show $ID 
+soluserlog list
+soluserlog show $ID
+</blockquote>
+
+<p>
+3、LogManager的使用问题：
+1)作为参数传到每个Manager，但这样的话，extern “C”函数(例如：extern "C" void * lcm_action_loop(void *arg)函数)不能识别它，若想让extern “C”识别它，则需要把LogManager也作为参数传递到该函数中，加上原来要传入的参数，则需要把二者构成结构体，对代码改动较大且比较零散。
+2)像原系统中使用各Manager那样使用LogManager，可行，不过代码要多点。
+综合考虑，选择第2种方法。
+使用第2种方法:
+Sol   &amp;  nd  = Sol::instance();
+LogManager * lm = nd.get_lm();
+ostringstream oss_log;
+oss_log &lt;&lt; "[" &lt;&lt; 0 &lt;&lt; "]" &lt;&lt; "[" &lt;&lt; LogManager::error_names[LogManager::INFO] &lt;&lt; "]" &lt;&lt; "[" &lt;&lt; hostname &lt;&lt; "]" &lt;&lt; "[" &lt;&lt; "ONE" &lt;&lt; "]" &lt;&lt; "[" &lt;&lt; "RECORD" &lt;&lt; "]" &lt;&lt; "Init SolCloud Log system" &lt;&lt; endl;
+lm-&gt;trigger(LogManager::FILE_LOG, oss_log.str());
+</p>
+
+<p>
+4、仿照原系统的方法实现了list的子命令。 
+list子命令设计
+soladminlog  list  &lt;subcommand&gt;  &lt;subparameter&gt;
+&lt;subcommand&gt;
+-i \(id		--id=\)id				日志ID；显示ID为$id的日志
+-t \(time		--time=\)time			时间；显示时间为$time的日志
+-u \(user		--user=\)user			用户名；显示用户名为$user的日志
+-h \(host		--host=\)host			主机名/主机IP；显示主机名为$host的日志
+-l \(level		--level=\)level			日志级别；显示日志级别为$level的日志
+-m \(module	--module=\)module		日志所属模块；显示$module模块的日志
+-a			--all					显示所有日志（用户有权限查看的所有日志）
+</p>
+
+<p>
+注意：当子参数中含有空格时需要对子参数使用引号（单引号双引号皆可）。
+举例：soladminlog list -i 0
+缺陷：
+例如：soladminlog list -i 1
+那么ID=11,10,12,21…的项都会显示出来。
+</p>
+
+<p>
+5、其他问题（已解决）
+	1) 制作CentOS系统的U盘启动盘
+要在把ISO镜像写入U盘后删除掉除了syslinux目录外的所有文件和目录，然后再把iso文件直接拷贝到U盘里。
+	2) CentOS(with XEN)&amp;Ubuntu双系统引导的问题
+能够顺利进入Ubuntu10.04，但无法进入CentOS5.4，提示说：Error:invalid magic number。
+最后看到一个说法：grub2有一些bug会导致xen无法正常启动，所以需要删除grub2，换回老版本grub。
+换回老版本grub后顺利进入CentOS。
+	3) 物理机安装的CentOS缺网卡驱动
+一定要看LOG！
+看/var/log/messages，开始没认真看，只看了最后一句是dhclient:NO DHCPOFFERS received。于是又在怀疑dhcp有问题，又乱整了一阵。
+最后的最后，终于看到/var/log/messages中有这样的两句：
+r8169:eth0:unknown chipset
+ADDRCONF eth0:link is not ready
+Google“eth0:unknown chipset"，出来一堆都是英文的东西，看了一阵，头都大了，没有说到点上的，只知道是和硬件有关，是网卡的问题。
+Google：centos网卡不被识别。找到需要的内容。
+	4) linux下几种常见压缩方法“乱码”与否的比较
+结论：有中文文件时最好使用7z，以免在windows下无法解压。+
+6
+</p>
+
+
+
+
+<h3 id="toc_0.1.4">命令行接口和web接口设计</h3>
+<p>
+设计：
+命令行
+普通用户只能查看自己的日志，此时
+soluserlog show = soluserlog show [UID]
+soluserlog show [UID]
+</p>
+
+<p>
+Admin才有权限查看：
+soladminlog show [UID]
+soladminlog show = soladminlog show all
+soluserlog show = soluserlog show all
+</p>
+
+
+<p>
+soladminlogAdminLog.rbPool.rb……RequestManager.ccRequestManagerAdminLogInfo.cc
+若当前用户为Admin则可查看，否则不允许查看。
+</p>
+
+<p>
+soluserlogUserLog.rbPool.rb……RequestManager.ccRequestManagerUserLogInfo.cc
+</p>
+
+
+
+
+
+
+<p>
+代码修改情况
+增加的文件：
+src/cli/soladminlog
+src/oca/ruby/SolCloud/AdminLog.rb
+src/oca/ruby/SolCloud/AdminLogPool.rb
+src/rm/RequestManagerAdminLogInfo.cc
+src/rm/RequestManagerAdminLogPoolInfo.cc
+修改的文件：
+src/rm/RequestManager.cc
+include/RequestManager.h
+src/rm/SConstruct----添加文件RequestManagerAdminLogInfo.cc
+install.sh—添加文件soladminlog
+</p>
+
+<p>
+soladminlog show &lt;id&gt;	id为logid，参考image等的id设置方法来实现id的自动编号。
+show命令用于显示单条日志的详细信息。
+list命令用于显示多条日志的概略信息。
+List的选项：
+-t	TIMESTAMP	按时间查询日志
+-u	USERID		按用户查询日志
+-l	MESGLEVEL	按日志级别查询日志
+-h	HOST		按主机查询日志
+另外：
+1、要检查用户权限（client端call自动带上用户名及密码）
+2、先做web设计，以明确需要哪些参数（用户能输入什么，需要返回什么给用户，据此来设计命令行）。
+</p>
+
+<p>
+关于ID自动编号：
+通过PoolSQL类的构造函数获取MAX(id)到lastOID变量，然后再加1。
+</p>
+
+
+<p>
+日志系统命令接口及其返回值
+</p>
+
+<p>
+1、列表显示所有管理员日志信息
+2、列表显示用户日志信息
+3、显示指定ID的管理员日志的详细信息
+4、显示指定ID的用户日志的详细信息
+5、按条件查询日志信息（未完成）
+</p>
+
+<p>
+1
+【输入参数】
+$client:		用户登陆时创建的client对象
+【接口】
+	adminloglist=AdminlogShow.new($client)
+result=adminloglist.list_short()
+【返回值】
+SolCloud::is_error?(result)
+为真则操作失败，result.message为错误信息，类型为String
+	为假则操作成功，返回所有主机的信息
+【信息显示格式】
+	日志ID，时间，用户ID，日志级别，主机名，模块，引发日志的操作
+【示例】
+ID   TIMESTAMP         UID  MESGLEVEL         HOST   MODULE   OPERATION
+ 0   Sep 08, 2011 19:42    0          I           ubuntu      SOL     RECORD
+</p>
+
+
+<p>
+2
+【输入参数】
+$client:		用户登陆时创建的client对象
+【接口】
+	userloglist=UserlogShow.new($client)
+	result=userloglist.list_short()
+【返回值】
+SolCloud::is_error?(result)
+为真则操作失败，result.message为错误信息，类型为String
+	为假则操作成功，返回所有主机的信息
+【信息显示格式】
+	日志ID，时间，用户ID，主机名，引发日志的操作
+【示例】
+ ID               TIMESTAMP  UID             HOST  OPERATION
+0         Sep 08, 2011 19:42    0           ubuntu     RECORD
+</p>
+
+
+<p>
+3
+【输入参数】
+	$adminlog_id:    管理员日志ID
+$client:		用户登陆时创建的client对象
+【接口】
+	adminlog=SolCloud::AdminLog.new_with_id(\(adminlog_id,\)client)
+	result=adminlog.info
+【返回值】
+SolCloud::is_error?(result)
+为真则操作失败，result.message为错误信息，类型为String
+	为假则操作成功，返回所有ID为$adminlog_id的日志的详细信息
+【信息显示格式】
+	日志ID，时间，用户ID，日志级别，主机名，模块，引发日志的操作，日志内容
+【示例】
+ADMINLOG  0  INFORMATION                                                          
+ID                    : 0                   
+TIMESTAMP            : 09/08 19:42:02      
+UID                   : 0                   
+MESGLEVEL             : I                   
+HOST                  : ubuntu              
+MODULE               : SOL                 
+OPERATION             : RECORD              
+MESGCONTENT          : Init SolCloud Log system
+</p>
+
+
+<p>
+4
+【输入参数】
+	$userlog_id:    用户日志ID
+$client:		用户登陆时创建的client对象
+【接口】
+	userlog=SolCloud::UserLog.new_with_id(\(userlog_id,\)client)
+	result=userlog.info
+【返回值】
+SolCloud::is_error?(result)
+为真则操作失败，result.message为错误信息，类型为String
+	为假则操作成功，返回所有ID为$userlog_id的日志的详细信息
+【信息显示格式】
+	日志ID，时间，用户ID，主机名，引发日志的操作，日志内容
+【示例】
+USERLOG  0  INFORMATION                                                           
+ID                    : 0                   
+TIMESTAMP             : 09/08 19:42:03      
+UID                   : 0                   
+HOST                  : ubuntu              
+OPERATION             : RECORD              
+MESGCONTENT           : SolCloud System started
+</p>
+
+		</section>
+
+		<footer>
+		This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+		</footer>
+
+
+		</div>
+	</div>
+</body>
+</html>

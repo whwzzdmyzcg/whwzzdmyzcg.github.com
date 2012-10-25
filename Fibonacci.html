@@ -29,7 +29,7 @@
 
 		<section id="main_content">
 		
-<h2 id="toc_0.1" class="justcenter">Fibonacci</h2>
+<h2 id="toc_0.1">Fibonacci</h2>
 <p>
 <a href="http://www.cnblogs.com/xwdreamer/archive/2012/05/15/2501606.html">http://www.cnblogs.com/xwdreamer/archive/2012/05/15/2501606.html</a>
 <a href="http://blog.linjian.org/articles/fibonacci-essay/">http://blog.linjian.org/articles/fibonacci-essay/</a>
@@ -128,6 +128,7 @@ Matrix MatrixPow(const Matrix &amp;m, int n)
 			result *= tmp;
 		tmp *= tmp;
 	}
+	return Matrix;
 }
 int Fibonacci(int n)
 {
@@ -301,7 +302,7 @@ void test(int i)
 <p>
 用2*1(2行1列)的小矩形横着或竖着去覆盖更大的矩形。问用8个2*1的小矩形无重复地覆盖一个2*8的大矩形，共有多少种方法。
 <img src="images/Rectangle.png" />
-该题是斐波那契数列的变形。
+该题是斐波拉契数列的变形。
 </p>
 
 <p>
@@ -318,6 +319,49 @@ void test(int i)
 即f(8)=f(7)+f(6)。依此类推，最后f(1)=1，f(2)=2。使用计算斐波那契数列的方法即可求出答案。
 
 </ul>
+<h3 id="toc_0.1.11">扩展</h3>
+<p>
+假设A(0)=1,A(1)=2,A(2)=2。对于n&gt;2，都有A(k)=A(k-1)+A(k-2)+A(k-3)。
+</p>
+
+<p>
+1、对于任何一个给定的n，如何计算出A(n)？
+</p>
+
+<p>
+<strong>采用迭代法，用三个临时变量</strong>
+</p>
+<pre>
+int Fib(int n)
+{
+	if (n == 0)
+		return 1;
+	else if (n == 1 || n == 2)
+		return 2;
+	else
+	{
+		int pre = 1;
+		int post = 2;
+		int old = 2;
+		int i,An;
+		for (i = 3; i &lt;= n; i++)
+		{
+			An = pre + post + old;
+			pre = post;
+			post = old;
+			old = An;
+		}
+		return An;
+	}
+}
+</pre>
+<p>
+2、对于n非常大的情况，如n=2<sup><small>60</small></sup>的时候，如何计算A(n) mod M(M&lt;100000)呢？
+</p>
+
+<p>
+用矩阵转移法
+</p>
 
 		</section>
 
